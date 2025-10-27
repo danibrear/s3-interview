@@ -145,7 +145,6 @@ router.get('/month', async (req, res) => {
       domain: validatedUrl,
       response: responses.filter((r) => r !== null) as RawReport[],
     })
-
     const validatedResponse = MultipleMeasureResponseSchema.parse(reportMap)
     if (!validatedResponse) {
       throw new Error('Invalid response format')

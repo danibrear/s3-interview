@@ -30,6 +30,10 @@ export const processRawReport = ({
     domain,
     dates: reportMap.get('dates') || [],
     totalEmissions: reportMap.get('totalEmissions') || 0,
+    average: reportMap.get('totalEmissions')
+      ? (reportMap.get('totalEmissions') as number) /
+        (reportMap.get('dates') as string[]).length
+      : 0,
     high: {
       value: reportMap.get('high') || 0,
       date: reportMap.get('highDate') || '',
