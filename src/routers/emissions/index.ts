@@ -32,7 +32,7 @@ router.get('/day', async (req, res) => {
     validatedDate = DateFormatSchema.parse(date)
   } catch (error) {
     console.error(error)
-    res.status(400).json({ error: 'Invalid parameters' })
+    res.status(403).json({ error: 'Invalid parameters' })
     return
   }
 
@@ -41,12 +41,8 @@ router.get('/day', async (req, res) => {
       domain: validatedUrl,
       date: validatedDate,
     })
-    if (response === false) {
-      res.status(400).json({ error: 'Invalid date provided' })
-      return
-    }
 
-    if (response.totalEmissions) {
+    if (response && response.totalEmissions) {
       res.json({
         totalEmissions: response.totalEmissions,
         domain: validatedUrl,
@@ -55,8 +51,12 @@ router.get('/day', async (req, res) => {
       return
     }
 
-    res.status(404).json({ error: 'No emissions data found' })
+    res.status(403).json({ error: 'No emissions data found' })
   } catch (_error) {
+    if (_error instanceof Error && _error.name === 'InvalidDateError') {
+      res.status(403).json({ error: 'Invalid date provided' })
+      return
+    }
     console.error(_error)
     res.status(500).json({ error: 'Internal server error' })
   }
@@ -81,7 +81,7 @@ router.get('/week', async (req, res) => {
     }
   } catch (error) {
     console.log('[ERROR] Invalid parameters:', error)
-    res.status(400).json({ error: 'Invalid parameters' })
+    res.status(403).json({ error: 'Invalid parameters' })
     return
   }
 

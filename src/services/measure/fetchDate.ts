@@ -11,6 +11,13 @@ type RawFetchResponse = {
   totalEmissions: number
 }
 
+export class InvalidDateError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'InvalidDateError'
+  }
+}
+
 export const fetchDateWithUrl = async ({
   domain,
   date,
@@ -31,7 +38,7 @@ export const fetchDateWithUrl = async ({
   const now = startOfDay(getDateWithTimezone(new Date().toISOString()))
   const dateWithTimezone = getDateWithTimezone(date)
   if (!date || isAfter(dateWithTimezone, now) || isToday(dateWithTimezone)) {
-    throw new Error('Invalid date provided')
+    throw new InvalidDateError('Invalid date provided')
   }
   const response = await MeasureAPI.measure([domain], date)
   if (response.totalEmissions) {

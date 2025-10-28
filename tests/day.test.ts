@@ -32,3 +32,24 @@ test('GET /emissions/day', async () => {
     3
   )
 })
+
+test('Fails when given a future date', async () => {
+  const domain = 'yahoo.com'
+  const date = '3025-09-22'
+  try {
+    await axios(`http://localhost:3000/emissions/day`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {
+        domain,
+        date,
+      },
+    })
+  } catch (_error) {
+    const error = _error as { response: { status: number; data: unknown } }
+    expect(error.response.status).toBe(403)
+    expect(error.response.data).toHaveProperty('error', 'Invalid date provided')
+  }
+})
