@@ -45,7 +45,7 @@ Currently, this API only has one emissions endpoint (`/emissions/day`), which fe
     }
     ```
 - Implement the `/emissions/month` endpoint
-  - Endpoint must take `domain` and `date` query parameters (`date` here is the first day of the month, or simply "YYYY-MM").
+  - Endpoint must take `domain` and `date` query parameters (`date` here is the first day of the month, or simply `YYYY-MM`).
   - Response structure:
     ```json
     {

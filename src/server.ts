@@ -1,9 +1,10 @@
-import express from 'express'
 import cors from 'cors'
+import express from 'express'
 import pinoHttp from 'pino-http'
 
 import { logger } from '@/logger'
 import emissionsRouter from '@/routers/emissions'
+import { validateQueryData } from './middleware/validations'
 
 const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000
 
@@ -33,7 +34,7 @@ app.get('/hello', (req, res) => {
   res.send('Hello, world!')
 })
 
-app.use('/emissions', emissionsRouter)
+app.use('/emissions', validateQueryData, emissionsRouter)
 
 app.listen(port, () => {
   logger.info(`Server is running on port ${port}`)

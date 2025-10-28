@@ -1,13 +1,15 @@
+type DateString = string // 'YYYY-MM-DD' formatted date string
+
 export type RawMonthReport = {
   totalEmissions: number
   month: string
   domain: string
   high: {
-    date: string
+    date: DateString
     value: number
   }
   low: {
-    date: string
+    date: DateString
     value: number
   }
   average: number
@@ -18,11 +20,11 @@ export type RawWeekReport = {
   dates: string[]
   domain: string
   high: {
-    date: string
+    date: DateString
     value: number
   }
   low: {
-    date: string
+    date: DateString
     value: number
   }
   average: number
