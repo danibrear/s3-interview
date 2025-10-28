@@ -1,10 +1,12 @@
-export const processRawReport = ({
+import type { RawMonthReport, RawWeekReport } from '../types/RawReport'
+
+export const processWeeklyRawReport = ({
   domain,
   response,
 }: {
   domain: string
   response: Array<{ date: string; totalEmissions: number }>
-}) => {
+}): RawWeekReport => {
   const reportMap = response.reduce((acc, curr) => {
     if (curr && curr.totalEmissions) {
       acc.set('dates', [...(acc.get('dates') || []), curr.date])
@@ -29,6 +31,55 @@ export const processRawReport = ({
   return {
     domain,
     dates: reportMap.get('dates') || [],
+    totalEmissions: reportMap.get('totalEmissions') || 0,
+    average: reportMap.get('totalEmissions')
+      ? (reportMap.get('totalEmissions') as number) /
+        (reportMap.get('dates') as string[]).length
+      : 0,
+    high: {
+      value: reportMap.get('high') || 0,
+      date: reportMap.get('highDate') || '',
+    },
+    low: {
+      value: reportMap.get('low') || 0,
+      date: reportMap.get('lowDate') || '',
+    },
+  }
+}
+
+export const processMonthlyRawReport = ({
+  domain,
+  response,
+  month,
+}: {
+  domain: string
+  response: Array<{ date: string; totalEmissions: number }>
+  month: string
+}): RawMonthReport => {
+  const reportMap = response.reduce((acc, curr) => {
+    if (curr && curr.totalEmissions) {
+      acc.set('dates', [...(acc.get('dates') || []), curr.date])
+      acc.set(
+        'totalEmissions',
+        (acc.get('totalEmissions') || 0) + curr.totalEmissions
+      )
+    }
+    if (!curr) {
+      return acc
+    }
+    if (curr?.totalEmissions < acc.get('low') || !acc.has('low')) {
+      acc.set('low', curr.totalEmissions)
+      acc.set('lowDate', curr.date)
+    }
+    if (curr?.totalEmissions > acc.get('high') || !acc.has('high')) {
+      acc.set('high', curr.totalEmissions)
+      acc.set('highDate', curr.date)
+    }
+    return acc
+  }, new Map())
+  return {
+    domain,
+    month,
     totalEmissions: reportMap.get('totalEmissions') || 0,
     average: reportMap.get('totalEmissions')
       ? (reportMap.get('totalEmissions') as number) /

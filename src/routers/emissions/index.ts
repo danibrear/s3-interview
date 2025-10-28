@@ -1,10 +1,12 @@
 import { Router } from 'express'
 
-import MeasureAPI from '@/services/measure/api'
-import { isAfter, sub } from 'date-fns'
+import { fetchDateWithUrl } from '../../services/measure/fetchDate'
 import { MultipleMeasureResponseSchema } from '../../services/measure/response-types'
 import { getDaysOfMonth, getDaysOfWeek } from '../../utils/date'
-import { processRawReport } from '../../utils/report'
+import {
+  processMonthlyRawReport,
+  processWeeklyRawReport,
+} from '../../utils/report'
 import {
   DateFormatSchema,
   StartOfMonthDateFormatSchema,
@@ -35,10 +37,21 @@ router.get('/day', async (req, res) => {
   }
 
   try {
-    const response = await MeasureAPI.measure([validatedUrl], validatedDate)
+    const response = await fetchDateWithUrl({
+      domain: validatedUrl,
+      date: validatedDate,
+    })
+    if (response === false) {
+      res.status(400).json({ error: 'Invalid date provided' })
+      return
+    }
 
     if (response.totalEmissions) {
-      res.json({ totalEmissions: response.totalEmissions, domain, date })
+      res.json({
+        totalEmissions: response.totalEmissions,
+        domain: validatedUrl,
+        date: validatedDate,
+      })
       return
     }
 
@@ -71,24 +84,22 @@ router.get('/week', async (req, res) => {
     res.status(400).json({ error: 'Invalid parameters' })
     return
   }
+
   try {
     const days = getDaysOfWeek(validatedStartOfWeekDate)
 
     const responses = await Promise.all(
       days.map(async (date: string) => {
-        if (!date || isAfter(new Date(date), sub(new Date(), { days: 1 }))) {
-          return { date, totalEmissions: 0 }
-        }
-        const response = await MeasureAPI.measure([validatedUrl], date)
-        if (response.totalEmissions) {
-          return { date, totalEmissions: response.totalEmissions }
-        }
-        return { date, totalEmissions: 0 }
+        const result = await fetchDateWithUrl({
+          domain: validatedUrl,
+          date,
+        })
+        return result
       })
     )
-    const reportMap = processRawReport({
+    const reportMap = processWeeklyRawReport({
       domain: validatedUrl,
-      response: responses.filter((r) => r !== null) as RawReport[],
+      response: responses.filter((r) => r !== false) as RawReport[],
     })
 
     const validatedResponse = MultipleMeasureResponseSchema.parse(reportMap)
@@ -127,23 +138,16 @@ router.get('/month', async (req, res) => {
 
     const responses = await Promise.all(
       days.map(async (date: string) => {
-        if (!date || isAfter(new Date(date), sub(new Date(), { days: 1 }))) {
-          return { date, totalEmissions: 0 }
-        }
-        try {
-          const response = await MeasureAPI.measure([validatedUrl], date)
-          if (response.totalEmissions) {
-            return { date, totalEmissions: response.totalEmissions }
-          }
-        } catch (error) {
-          console.error(`[ERROR] MeasureAPI failed for date ${date}:`, error)
-        }
-        return { date, totalEmissions: 0 }
+        return await fetchDateWithUrl({
+          domain: validatedUrl,
+          date,
+        })
       })
     )
-    const reportMap = processRawReport({
+    const reportMap = processMonthlyRawReport({
       domain: validatedUrl,
-      response: responses.filter((r) => r !== null) as RawReport[],
+      month: validatedStartOfMonthDate,
+      response: responses.filter((r) => r !== false) as RawReport[],
     })
     const validatedResponse = MultipleMeasureResponseSchema.parse(reportMap)
     if (!validatedResponse) {

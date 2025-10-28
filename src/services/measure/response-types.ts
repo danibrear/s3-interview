@@ -190,8 +190,10 @@ export const MeasureResponseSchema = z.object({
 
 export const MultipleMeasureResponseSchema = z.object({
   domain: z.string(),
-  dates: z.array(z.string()),
+  dates: z.array(z.string()).optional(),
   totalEmissions: z.number(),
+  average: z.number(),
+  month: z.string().optional(),
   high: z.object({
     value: z.number(),
     date: z.string(),
