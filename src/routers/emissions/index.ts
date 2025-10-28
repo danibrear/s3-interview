@@ -1,5 +1,6 @@
 import { Router } from 'express'
 
+import { z } from 'zod'
 import { fetchDateWithUrl } from '../../services/measure/fetchDate'
 import { MultipleMeasureResponseSchema } from '../../services/measure/response-types'
 import { getDaysOfMonth, getDaysOfWeek } from '../../utils/date'
@@ -57,6 +58,13 @@ router.get('/day', async (req, res) => {
       res.status(403).json({ error: 'Invalid date provided' })
       return
     }
+    if (_error instanceof z.ZodError) {
+      console.error('[ERROR] Validation error:', _error)
+      res.status(403).json({
+        error: 'Invalid data received. Check the domain and try again',
+      })
+      return
+    }
     console.error(_error)
     res.status(500).json({ error: 'Internal server error' })
   }
@@ -109,6 +117,13 @@ router.get('/week', async (req, res) => {
 
     return res.json(validatedResponse)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('[ERROR] Validation error:', error)
+      res.status(403).json({
+        error: 'Invalid data received. Check the domain and try again',
+      })
+      return
+    }
     console.error('[ERROR] Invalid response format:', error)
     res.status(500).json({ error: 'Internal server error' })
     return
@@ -144,6 +159,8 @@ router.get('/month', async (req, res) => {
         })
       })
     )
+
+    console.log('responses:', responses)
     const reportMap = processMonthlyRawReport({
       domain: validatedUrl,
       month: validatedStartOfMonthDate,
@@ -156,6 +173,13 @@ router.get('/month', async (req, res) => {
 
     return res.json(validatedResponse)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('[ERROR] Validation error:', error)
+      res.status(403).json({
+        error: 'Invalid data received. Check the domain and try again',
+      })
+      return
+    }
     console.error('[ERROR] Invalid response format:', error)
     res.status(500).json({ error: 'Internal server error' })
     return

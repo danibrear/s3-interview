@@ -1,5 +1,6 @@
 import MeasureAPI from '@/services/measure/api'
 import { isAfter, isToday, startOfDay } from 'date-fns'
+import { z } from 'zod'
 import { getDateWithTimezone } from '../../utils/date'
 
 import NodeCache from 'node-cache'
@@ -40,10 +41,17 @@ export const fetchDateWithUrl = async ({
   if (!date || isAfter(dateWithTimezone, now) || isToday(dateWithTimezone)) {
     throw new InvalidDateError('Invalid date provided')
   }
-  const response = await MeasureAPI.measure([domain], date)
-  if (response.totalEmissions) {
-    cache.set(cacheKey, { date, totalEmissions: response.totalEmissions })
-    return { date, totalEmissions: response.totalEmissions }
+  try {
+    const response = await MeasureAPI.measure([domain], date)
+    if (response.totalEmissions) {
+      cache.set(cacheKey, { date, totalEmissions: response.totalEmissions })
+      return { date, totalEmissions: response.totalEmissions }
+    }
+  } catch (error) {
+    console.error('Error fetching emissions data:', error)
+    if (error instanceof z.ZodError) {
+      throw error
+    }
   }
   throw new Error('No emissions data found')
 }

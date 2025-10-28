@@ -143,9 +143,7 @@ class Client {
           },
           'API response validation failed'
         )
-        throw new Error(
-          `API response validation failed: ${error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`
-        )
+        throw new z.ZodError(error.issues)
       }
 
       throw error
@@ -154,5 +152,5 @@ class Client {
 }
 
 export default Client.new()
-export { MeasureRowSchema, RequestRowSchema, MeasureQueryParamsSchema }
-export type { MeasureRow, RequestRow, MeasureQueryParams }
+export { MeasureQueryParamsSchema, MeasureRowSchema, RequestRowSchema }
+export type { MeasureQueryParams, MeasureRow, RequestRow }
