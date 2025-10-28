@@ -160,7 +160,6 @@ router.get('/month', async (req, res) => {
       })
     )
 
-    console.log('responses:', responses)
     const reportMap = processMonthlyRawReport({
       domain: validatedUrl,
       month: validatedStartOfMonthDate,
